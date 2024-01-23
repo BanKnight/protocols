@@ -2,39 +2,41 @@
  * 参考:https://wiyi.org/socks5-protocol-in-deep.html
  */
 
-import { Type, When } from "../ops";
+import { Types } from "../ops";
 
-export const TypeAddress = Type.Object()
-    .define("family", Type.UInt8())
-    .define("ipv4", Type.IPV4(), When("family", 0x01))
-    .define("domain", Type.Domain(), When("family", 0x03))
-    .define("ipv6", Type.IPV6BE(), When("family", 0x04))
+export const TypeAddress = Types.struct()
+    .define("family", Types.UInt8())
+    .switch("family", {
+        0x01: ["ipv4", Types.IPV4()],
+        0x03: ["domain", Types.Domain()],
+        0x04: ["ipv6", Types.IPV6BE()],
+    })
 
-export const Version = Type.Object()
-    .define("version", Type.UInt8(0x05))
+export const Version = Types.struct()
+    .define("version", Types.UInt8(0x05))
 
-export const Negotiate = Type.Object(Version)
-    .define("nmethods", Type.UInt8())
+export const Negotiate = Types.struct(Version)
+    .define("nmethods", Types.UInt8())
 
-export const NegotiateReply = Type.Object(Version)
-    .define("method", Type.UInt8())
+export const NegotiateReply = Types.struct(Version)
+    .define("method", Types.UInt8())
 
-export const Auth = Type.Object(Version)
-    .define("uname", Type.L8String())
-    .define("passwd", Type.L8String())
+export const Auth = Types.struct(Version)
+    .define("uname", Types.L8String())
+    .define("passwd", Types.L8String())
 
-export const AuthReply = Type.Object(Version)
-    .define("status", Type.UInt8())
+export const AuthReply = Types.struct(Version)
+    .define("status", Types.UInt8())
 
-export const Request = Type.Object(Version)
-    .define("cmd", Type.UInt8())
-    .define("rsv", Type.UInt8(0x00))
+export const Request = Types.struct(Version)
+    .define("cmd", Types.UInt8())
+    .define("rsv", Types.UInt8(0x00))
     .define("address", TypeAddress)
-    .define("port", Type.UInt16BE())
+    .define("port", Types.UInt16BE())
 
-export const Reply = Type.Object(Version)
-    .define("reply", Type.UInt8())
-    .define("rsv", Type.UInt8(0x00))
+export const Reply = Types.struct(Version)
+    .define("reply", Types.UInt8())
+    .define("rsv", Types.UInt8(0x00))
     .define("bind", TypeAddress)
-    .define("port", Type.UInt16BE())
+    .define("port", Types.UInt16BE())
 
