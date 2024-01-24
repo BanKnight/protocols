@@ -1,8 +1,4 @@
-# protocols（wip）
-
-包含多个npm库，用于简化二进制协议的实现
-
-## typebuffer
+# typebuffer
 
 一个简单的二进制读写库,可用于定义复杂的协议
 
@@ -53,12 +49,3 @@ export const Reply = Types.Struct(Version)
     .define("bind", TypeAddress)
     .define("port", Types.UInt16BE())
 ```
-
-## typeprotols
-
-预定义了很多协议的库，包含如下：
-
-+ socks5
-+ vless
-+ ws
-+ mux

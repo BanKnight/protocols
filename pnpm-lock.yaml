@@ -26,7 +26,7 @@ importers:
   packages/typeprotos:
     dependencies:
       typebuffer:
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../typebuffer
 
 packages:
