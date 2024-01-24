@@ -1,7 +1,7 @@
-import { Transformer, Scope } from "./type";
+import { Pipe, Scope } from "./type";
 import { get, set } from "./utils";
 
-export function Bits(config: Record<string, number>): Transformer {
+export function Bits(config: Record<string, number>): Pipe {
     return {
         toScope(scope: Scope, value: any) {
             let offset = 0
@@ -29,7 +29,7 @@ export function Bits(config: Record<string, number>): Transformer {
         },
     }
 }
-export function Single(key: string): Transformer {
+export function Single(key: string): Pipe {
     return {
         toScope(scope: Scope, value: any) {
             set(scope, key, value)

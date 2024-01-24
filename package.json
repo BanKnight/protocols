@@ -1,40 +1,19 @@
 {
-    "name": "@bansky/protocols",
-    "version": "0.0.1",
-    "description": "vless socks5 ",
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.mjs",
-    "types": "./dist/index.d.cts",
-    "exports": {
-        "require": {
-            "types": "./dist/index.d.cts",
-            "default": "./dist/index.cjs"
-        },
-        "import": {
-            "types": "./dist/index.d.mts",
-            "default": "./dist/index.mjs"
-        }
-    },
+    "name": "protocols",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "private": true,
     "scripts": {
-        "build": "pkgroll"
+        "typebuffer.build": "pnpm --filter typebuffer build",
+        "typeprotos.build": "pnpm --filter typeprotos build",
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/BanKnight/protocols.git"
-    },
-    "keywords": [
-        "vless",
-        "socks",
-        "protocols"
-    ],
-    "author": "bansky",
+    "keywords": [],
+    "author": "",
     "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/BanKnight/protocols/issues"
-    },
-    "homepage": "https://github.com/BanKnight/protocols#readme",
     "devDependencies": {
-        "@types/node": "^20.10.6",
+        "@types/node": "^20.11.5",
         "pkgroll": "^2.0.1",
         "typescript": "^5.3.3"
     }

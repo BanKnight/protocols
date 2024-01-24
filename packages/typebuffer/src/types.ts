@@ -1,5 +1,5 @@
-import { Transformer, Context, Scope, TypeOp, ObjectOp, Getter } from "./type";
-import * as Converters from "./transformer";
+import { Pipe, Context, Scope, TypeOp, ObjectOp, Getter } from "./type";
+import * as Pipes from "./pipes";
 import { get, set } from "./utils";
 
 export function UInt8(solid: number = 0) {
@@ -310,7 +310,7 @@ export class StructType {
         }
     }
 
-    define(name: string | Array<string> | Transformer, type: TypeOp): this {
+    define(name: string | Array<string> | Pipe, type: TypeOp): this {
         const op = this.makeOp(name, type)
 
         this.ops.push(op)
@@ -320,17 +320,17 @@ export class StructType {
     }
 
     bits(schema: Record<string, number>, type: TypeOp) {
-        return this.define(Converters.Bits(schema), type)
+        return this.define(Pipes.Bits(schema), type)
     }
 
-    private makeOp(name: string | Array<string> | Transformer, type: TypeOp): ObjectOp {
+    makeOp(name: string | Array<string> | Pipe, type: TypeOp): ObjectOp {
         const op = { type } as any
         if (typeof name == "string") {
-            op.converter = Converters.Single(name)
+            op.converter = Pipes.Single(name)
         }
         else if (name instanceof Array) {
             //@ts-ignore
-            op.converter = Converters.Many(...name)
+            op.converter = Pipes.Many(...name)
         }
         else {
             op.converter = name
@@ -339,12 +339,12 @@ export class StructType {
         return op
     }
 
-    private opRead(op: ObjectOp, context: Context, scope: Scope) {
+    opRead(op: ObjectOp, context: Context, scope: Scope) {
         const value = op.type.read(context, scope)
         op.converter.toScope(scope, value, context)
     }
 
-    private opWrite(op: ObjectOp, context: Context, scope: Scope) {
+    opWrite(op: ObjectOp, context: Context, scope: Scope) {
         const value = op.converter.toBuffer(scope, context)
         if (!value) {
             return
@@ -352,13 +352,13 @@ export class StructType {
         op.type.write(context, scope, value)
     }
 
-    when(property: string | Getter, cond: any, then: [string | Transformer, TypeOp]) {
+    when(property: string | Getter, cond: any, then: [string | Pipe, TypeOp]) {
 
         const getValue = typeof property == "string" ? (scope: any) => get(scope, property) : property
         const thenOp = this.makeOp(then[0], then[1])
 
         const op = {
-            converter: Converters.Empty(),
+            converter: Pipes.Empty(),
             type: {
                 len: 0,
                 read: (context: Context, scope: Scope) => {
@@ -383,7 +383,7 @@ export class StructType {
         return this
     }
 
-    switch(property: string | Getter, cases: Record<keyof any, [string | Transformer, TypeOp]>) {
+    switch(property: string | Getter, cases: Record<keyof any, [string | Pipe, TypeOp]>) {
 
         const getValue = typeof property == "string" ? (scope: any) => get(scope, property) : property
 
@@ -394,7 +394,7 @@ export class StructType {
         }, {} as { [key: keyof any]: ObjectOp })
 
         const op = {
-            converter: Converters.Empty(),
+            converter: Pipes.Empty(),
             type: {
                 len: Object.keys(ops).reduce((p, c) => Math.min(p + (ops[c]?.type.len ?? 0)), Infinity),
                 read: (context: Context, scope: Scope) => {
@@ -441,64 +441,9 @@ export class StructType {
     }
 }
 
-export function struct(...base: Array<StructType>) {
+export function Struct(...base: StructType[]) {
     return new StructType(...base)
 }
-
-// export function Bit() {
-//     return {
-//         len: 1,
-//         read(context: Context) {
-//             const val = context.buffer.readUint8(context.offset)
-//             const bit = 1 << (7 - context.bit) & val
-
-//             context.bit++
-
-//             return bit
-//         },
-//         write(context: Context, value: 1 | 0) {
-//             const val = context.buffer.readUint8(context.offset)
-//             const bit = (value << (7 - context.bit))
-
-//             context.buffer.writeUint8(context.offset, val | bit)
-
-//             context.bit++
-//         },
-//     }
-// }
-
-// export function ULength() {
-
-//     const type1 = Bits(7)
-//     const type2 = UInt16BE()
-//     const type3 = UInt64BE()
-
-//     return {
-//         len: 1,
-//         read(context: Context) {
-//             const len = type1.read(context)
-//             if (len < 126) {
-//                 return len
-//             }
-//             if (len == 126) {
-//                 return type2.read(context)
-//             }
-//             return type3.read(context)
-//         },
-//         write(context: Context, value: number = 0) {
-//             if (value < 126) {
-//                 return type1.write(context, value)
-//             }
-//             if (value < 2 ** 16) {
-//                 type1.write(context, 126)
-//                 type2.write(context, value)
-//                 return
-//             }
-//             type1.write(context, 127)
-//             type3.write(context, BigInt(value))
-//         }
-//     }
-// }
 
 
 

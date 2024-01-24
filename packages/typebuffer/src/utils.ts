@@ -1,4 +1,4 @@
-import { TypeOp } from ".";
+import { TypeOp } from "./type";
 class When {
     cmp!: (_: any, scope: any) => boolean;
     constructor(private name: string) { }

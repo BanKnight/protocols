@@ -1,9 +1,9 @@
 /**
  * 参考： https://xtls.github.io/Xray-docs-next/development/protocols/muxcool.html
  */
-import { Types } from "../ops";
+import { Types } from "typebuffer";
 
-export const TypeAddress = Types.struct()
+export const TypeAddress = Types.Struct()
     .define("protocol", Types.UInt8())       //0x1: tcp, 0x2:udp
     .define("port", Types.L16BufferBE())
     .define("family", Types.UInt8())
@@ -13,15 +13,15 @@ export const TypeAddress = Types.struct()
         0x03: ["ipv6", Types.IPV6BE()],
     })
 
-const New = Types.struct(TypeAddress)
+const New = Types.Struct(TypeAddress)
     .switch("protocol", {
         0x01: ["tcp", Types.All()],
         0x02: ["udp", Types.L16BufferBE()],
     })
 
-const KeepAlive = Types.struct(TypeAddress)
+const KeepAlive = Types.Struct(TypeAddress)
 
-export const Meta = Types.struct()
+export const Meta = Types.Struct()
     .define("uid", Types.UInt16BE())
     .define("cmdType", Types.UInt8())
     .switch("cmdType", {
@@ -31,7 +31,7 @@ export const Meta = Types.struct()
         0x04: ["keepAlive", KeepAlive],
     })
 
-export const Packet = Types.struct()
+export const Packet = Types.Struct()
     .define("meta", Types.L16ObjectBe(Meta))
     .when("meta.opt", 0x01, ["extra", Types.L16BufferBE()])
 
