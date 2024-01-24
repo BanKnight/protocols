@@ -1,5 +1,5 @@
-import { Converter, Context, Scope, TypeOp, ObjectOp, Getter } from "./type";
-import * as Converters from "./converters";
+import { Transformer, Context, Scope, TypeOp, ObjectOp, Getter } from "./type";
+import * as Converters from "./transformer";
 import { get, set } from "./utils";
 
 export function UInt8(solid: number = 0) {
@@ -310,7 +310,7 @@ export class StructType {
         }
     }
 
-    define(name: string | Array<string> | Converter, type: TypeOp): this {
+    define(name: string | Array<string> | Transformer, type: TypeOp): this {
         const op = this.makeOp(name, type)
 
         this.ops.push(op)
@@ -323,7 +323,7 @@ export class StructType {
         return this.define(Converters.Bits(schema), type)
     }
 
-    private makeOp(name: string | Array<string> | Converter, type: TypeOp): ObjectOp {
+    private makeOp(name: string | Array<string> | Transformer, type: TypeOp): ObjectOp {
         const op = { type } as any
         if (typeof name == "string") {
             op.converter = Converters.Single(name)
@@ -352,7 +352,7 @@ export class StructType {
         op.type.write(context, scope, value)
     }
 
-    when(property: string | Getter, cond: any, then: [string | Converter, TypeOp]) {
+    when(property: string | Getter, cond: any, then: [string | Transformer, TypeOp]) {
 
         const getValue = typeof property == "string" ? (scope: any) => get(scope, property) : property
         const thenOp = this.makeOp(then[0], then[1])
@@ -383,7 +383,7 @@ export class StructType {
         return this
     }
 
-    switch(property: string | Getter, cases: Record<keyof any, [string | Converter, TypeOp]>) {
+    switch(property: string | Getter, cases: Record<keyof any, [string | Transformer, TypeOp]>) {
 
         const getValue = typeof property == "string" ? (scope: any) => get(scope, property) : property
 
