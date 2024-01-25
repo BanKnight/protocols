@@ -32,7 +32,7 @@ export const Meta = Types.Struct()
     })
 
 export const Packet = Types.Struct()
-    .define("meta", Types.L16ObjectBe(Meta))
+    .define("meta", Types.L16ChildBE(Meta))
     .when("meta.opt", 0x01, ["extra", Types.L16BufferBE()])
 
 

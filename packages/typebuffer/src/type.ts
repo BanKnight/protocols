@@ -1,6 +1,3 @@
-export type ReadHandler = (context: Context, scope: any) => any
-export type WriteHandler = (context: Context, scope: any, value: any) => void
-
 export type Scope = Record<string, any>; // 用于存储变量的作用域
 
 /**
@@ -25,9 +22,25 @@ export interface Pipe {
 }
 
 export interface TypeOp {
+    /**
+     * static length
+     */
     len: number;
-    read: ReadHandler;
-    write: WriteHandler;
+    /**
+     * how to read data from buffer
+     * @param context 
+     * @param scope 
+     * @returns 
+     */
+    read: (context: Context, scope: any) => any;
+    /**
+     * how to write data to buffer
+     * @param context 
+     * @param scope 
+     * @param value 
+     * @returns 
+     */
+    write: (context: Context, scope: any, value: any) => void;
 }
 
 export type Getter = Pipe["toBuffer"]
@@ -41,6 +54,6 @@ export interface Context {
 
 export interface ObjectOp {
     type: TypeOp;
-    converter: Pipe;
+    pipe: Pipe;
 }
 

@@ -58,11 +58,36 @@ export function UInt64LE(solid: bigint = 0n) {
 export function Bytes(len: number = 0) {
     return {
         len,
-        read(context: Context) { return context.buffer.subarray(context.offset, context.offset += len); },
-        write(context: Context, scope: any, value: Buffer = Buffer.alloc(len)) { value.copy(context.buffer, context.offset); context.offset += len }
+        read(context: Context) {
+            return context.buffer.subarray(context.offset, context.offset += len);
+        },
+        write(context: Context, scope: any, value: Buffer = Buffer.alloc(len)) {
+            context.offset += value.copy(context.buffer, context.offset, 0, len);
+        }
     }
 }
-export function L8Buffer() {
+
+/**
+ * 以另外一个变量的值作为长度，来读写Buffer
+ * 读buffer: 用 scope[name] 作为后续的Buffer长度
+ * 写buffer：直接用 value的长度
+ * 
+ * @param name 
+ * @returns 
+ */
+export function VarBytes(name: string) {
+    return {
+        len: 0,
+        read(context: Context, scope: Scope) {
+            const len = get(scope, name) as number
+            return context.buffer.subarray(context.offset, context.offset += len);
+        },
+        write(context: Context, scope: any, value: Buffer) {
+            context.offset += value.copy(context.buffer, context.offset);
+        }
+    }
+}
+export function L8Bytes() {
     return {
         len: 1,
         read(context: Context) {
@@ -102,7 +127,12 @@ export function L16BufferBE() {
     }
 }
 
-export function L16ObjectBe(child: TypeOp) {
+/**
+ * 长度 + 子对象
+ * @param child 
+ * @returns 
+ */
+export function L16ChildBE(child: TypeOp) {
     return {
         len: 2 + child.len,
         read(context: Context, scope: any) {
@@ -186,6 +216,11 @@ export function L16StringLE() {
         }
     }
 }
+/**
+ * 不做任何事，只是增加 offset
+ * @param len 
+ * @returns 
+ */
 export function Ignore(len: number = 0) {
     return {
         len,
@@ -211,7 +246,12 @@ export function All() {
         }
     }
 }
-
+/**
+ * 按照固定大小的数组来读写
+ * @param len 
+ * @param item 
+ * @returns 
+ */
 export function Array(len: number, item: TypeOp) {
     return {
         len: item.len * len,
@@ -324,16 +364,17 @@ export class StructType {
     }
 
     makeOp(name: string | Array<string> | Pipe, type: TypeOp): ObjectOp {
-        const op = { type } as any
+        const op = { type } as ObjectOp
         if (typeof name == "string") {
-            op.converter = Pipes.Single(name)
+            op.pipe = Pipes.Single(name)
         }
         else if (name instanceof Array) {
             //@ts-ignore
-            op.converter = Pipes.Many(...name)
+            op.pipe = Pipes.Many(...name)
         }
         else {
-            op.converter = name
+            //@ts-ignore
+            op.pipe = name
         }
 
         return op
@@ -341,11 +382,11 @@ export class StructType {
 
     opRead(op: ObjectOp, context: Context, scope: Scope) {
         const value = op.type.read(context, scope)
-        op.converter.toScope(scope, value, context)
+        op.pipe.toScope(scope, value, context)
     }
 
     opWrite(op: ObjectOp, context: Context, scope: Scope) {
-        const value = op.converter.toBuffer(scope, context)
+        const value = op.pipe.toBuffer(scope, context)
         if (!value) {
             return
         }
@@ -357,8 +398,8 @@ export class StructType {
         const getValue = typeof property == "string" ? (scope: any) => get(scope, property) : property
         const thenOp = this.makeOp(then[0], then[1])
 
-        const op = {
-            converter: Pipes.Empty(),
+        const op: ObjectOp = {
+            pipe: Pipes.Empty(),
             type: {
                 len: 0,
                 read: (context: Context, scope: Scope) => {
@@ -393,8 +434,8 @@ export class StructType {
             )
         }, {} as { [key: keyof any]: ObjectOp })
 
-        const op = {
-            converter: Pipes.Empty(),
+        const op: ObjectOp = {
+            pipe: Pipes.Empty(),
             type: {
                 len: Object.keys(ops).reduce((p, c) => Math.min(p + (ops[c]?.type.len ?? 0)), Infinity),
                 read: (context: Context, scope: Scope) => {

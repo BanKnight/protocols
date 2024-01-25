@@ -21,7 +21,7 @@ export const Success = Types.Struct()
 export const HandShake = Types.Struct()
     .define("version", Types.UInt8())
     .define("uuid", Types.Bytes(16))
-    .define("opt", Types.L8Buffer())      //opt buffer
+    .define("opt", Types.L8Bytes())      //opt buffer
     .define("cmd", Types.UInt8())
 
 export const Packet = Types.Struct(HandShake)
