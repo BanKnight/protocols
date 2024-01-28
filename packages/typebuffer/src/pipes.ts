@@ -1,61 +1,38 @@
 import { Pipe, Scope } from "./type";
-import { get, set } from "./utils";
 
-export function Bits(config: Record<string, number>): Pipe {
+export function Bits(...lens: Array<number>): Pipe {
     return {
-        toScope(scope: Scope, value: any) {
-            let offset = 0
-            for (let key in config) {
-                const l = config[key]!
-                const v = (value >> (8 - l - offset)) & ((1 << l) - 1)
+        fromLeft(array: Array<number>, scope: Scope): number {
 
-                set(scope, key, v)
-                offset += l
-            }
-        },
-        toBuffer(scope): number {
             let value = 0
             let offset = 0
 
-            for (let key in config) {
-                const l = config[key]!
-                const v = get(scope, key)!
+            for (let i = 0; i < array.length; i++) {
+                const v = array[i]!
+                const l = lens[i]!
 
                 value |= (v << (8 - l - offset))
                 offset += l
             }
-
             return value
         },
-    }
-}
-export function Single(key: string): Pipe {
-    return {
-        toScope(scope: Scope, value: any) {
-            set(scope, key, value)
+        fromRight(value: number, scope: Scope) {
+            let offset = 0
+            const ret = []
+            for (let i = 0; i < lens.length; i++) {
+                const l = lens[i]!
+                const v = (value >> (8 - l - offset)) & ((1 << l) - 1)
+                ret.push(v)
+                offset += l
+            }
+            return ret
         },
-        toBuffer(scope): any {
-            return get(scope, key)
-        }
     }
 }
 
-export function Many(...keys: Array<string>) {
+export function Empty(): Pipe {
     return {
-        toScope(scope: Scope, value: any) {
-            keys.forEach(
-                (key, index) => set(scope, key, value[index])
-            )
-        },
-        toBuffer(scope: Scope): any {
-            return keys.map(key => get(scope, key))
-        }
-    }
-}
-
-export function Empty() {
-    return {
-        toScope() { },
-        toBuffer() { }
+        fromLeft(value: any, scope: Scope) { return value },
+        fromRight(value: any, scope: Scope) { return value },
     }
 }

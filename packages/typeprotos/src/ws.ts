@@ -1,4 +1,4 @@
-import { Types, TypeOp, Context } from "typebuffer";
+import { Pipes, Types, TypeOp, Context } from "typebuffer";
 
 const UInt8 = Types.UInt8()
 const UInt16 = Types.UInt16BE()
@@ -45,8 +45,11 @@ export const MaskPayloadLength: TypeOp = {
  * 参考：https://juejin.cn/post/6963872619632263175
  */
 export const Frame = Types.Struct()
-    .bits({ fin: 1, rsv1: 1, rsv2: 1, rsv3: 1, opcode: 4 }, Types.UInt8())
-    .bits({ mask: 1, payloadLength: 7 }, Types.UInt8())
-    .define(["mask", "payloadLength"], MaskPayloadLength)
-    .when("mask", 1, ["maskingKey", Types.Bytes(4)])
-    .define("payload", Types.All())
+    .define(["fin", "rsv1", "rsv2", "rsv3", "opcode"],
+        Pipes.Bits(1, 1, 1, 1, 4),
+        Types.UInt8()
+    )
+    .define(["mask", "payloadLength"], Pipes.Bits(1, 7), MaskPayloadLength)
+    .select("mask", {
+        1: ["maskingKey", Types.Bytes(4)],
+    })

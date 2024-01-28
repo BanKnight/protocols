@@ -6,7 +6,7 @@ import { Types } from "typebuffer";
 
 export const TypeAddress = Types.Struct()
     .define("family", Types.UInt8())
-    .switch("family", {
+    .select("family", {
         0x01: ["ipv4", Types.IPV4()],
         0x03: ["domain", Types.Domain()],
         0x04: ["ipv6", Types.IPV6BE()],

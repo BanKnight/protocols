@@ -1,6 +1,7 @@
-import { Pipe, Context, Scope, TypeOp, ObjectOp, Getter } from "./type";
-import * as Pipes from "./pipes";
-import { get, set } from "./utils";
+import { Pipe, Context, Scope, TypeOp, StructOp, Getter, Attribute } from "./type";
+import * as Attributes from "./attributes";
+
+import { get, makeOp, opRead, opWrite } from "./utils";
 
 export function UInt8(solid: number = 0) {
     return {
@@ -221,7 +222,7 @@ export function L16StringLE() {
  * @param len 
  * @returns 
  */
-export function Ignore(len: number = 0) {
+export function Void(len: number = 0) {
     return {
         len,
         read(context: Context) {
@@ -332,9 +333,21 @@ export function IPV6BE() {
 
 export const Domain = L8String
 
+class StructBase {
+    len: number = 0;
+    ops: Array<StructOp> = []
+
+    constructor(...base: Array<StructBase>) {
+        for (const b of base) {
+            this.len += b.len;
+            this.ops.push(...b.ops);
+        }
+    }
+}
+
 export class StructType {
     len: number = 0;
-    ops: Array<ObjectOp> = []
+    ops: Array<StructOp> = []
 
     constructor(...base: Array<StructType>) {
         for (const b of base) {
@@ -350,8 +363,12 @@ export class StructType {
         }
     }
 
-    define(name: string | Array<string> | Pipe, type: TypeOp): this {
-        const op = this.makeOp(name, type)
+    define(name: string, type: TypeOp): this;
+    define(name: string, pipe: Pipe, type: TypeOp): this;
+    define(names: Array<string>, pipe: Pipe, type: TypeOp): this; // for arrays of names (e.g. for enums
+    define(names: string | Array<string>, pipe: Pipe | TypeOp, type?: TypeOp): this {
+
+        const op = makeOp(names, pipe, type)
 
         this.ops.push(op)
         this.len += op.type.len
@@ -359,85 +376,32 @@ export class StructType {
         return this
     }
 
-    bits(schema: Record<string, number>, type: TypeOp) {
-        return this.define(Pipes.Bits(schema), type)
-    }
-
-    makeOp(name: string | Array<string> | Pipe, type: TypeOp): ObjectOp {
-        const op = { type } as ObjectOp
-        if (typeof name == "string") {
-            op.pipe = Pipes.Single(name)
-        }
-        else if (name instanceof Array) {
-            //@ts-ignore
-            op.pipe = Pipes.Many(...name)
-        }
-        else {
-            //@ts-ignore
-            op.pipe = name
-        }
-
-        return op
-    }
-
-    opRead(op: ObjectOp, context: Context, scope: Scope) {
-        const value = op.type.read(context, scope)
-        op.pipe.toScope(scope, value, context)
-    }
-
-    opWrite(op: ObjectOp, context: Context, scope: Scope) {
-        const value = op.pipe.toBuffer(scope, context)
-        if (!value) {
-            return
-        }
-        op.type.write(context, scope, value)
-    }
-
-    when(property: string | Getter, cond: any, then: [string | Pipe, TypeOp]) {
-
-        const getValue = typeof property == "string" ? (scope: any) => get(scope, property) : property
-        const thenOp = this.makeOp(then[0], then[1])
-
-        const op: ObjectOp = {
-            pipe: Pipes.Empty(),
-            type: {
-                len: 0,
-                read: (context: Context, scope: Scope) => {
-                    const value = getValue(scope, context)
-                    if (value == cond) {
-                        return this.opRead(thenOp, context, scope)
-                    }
-                },
-                write: (context: Context, scope: Scope) => {
-                    const value = getValue(scope, context)
-                    if (value == cond) {
-                        return this.opWrite(thenOp, context, scope)
-                    }
-                }
-            }
-        }
-
-        this.ops.push(op)
-
-        this.len += op.type.len// 计算最小长度
-
-        return this
-    }
-
-    switch(property: string | Getter, cases: Record<keyof any, [string | Pipe, TypeOp]>) {
-
+    select(property: string | Getter,
+        cases: Record<keyof any, [
+            names: string | Array<string>,
+            pipe: Pipe | TypeOp,
+            type?: TypeOp
+        ]>
+    ) {
         const getValue = typeof property == "string" ? (scope: any) => get(scope, property) : property
 
-        const ops = Object.keys(cases).reduce((p, c) => {
-            //@ts-ignore
-            return Object.assign(p, { [c]: this.makeOp(cases[c][0], cases[c][1]) }
-            )
-        }, {} as { [key: keyof any]: ObjectOp })
+        let len = Infinity
+        const ops: { [key: keyof any]: StructOp } = Object.keys(cases).reduce((p, cond: string) => {
+            const oneCase = cases[cond]!
+            const op = makeOp(...oneCase)
 
-        const op: ObjectOp = {
-            pipe: Pipes.Empty(),
+            len = Math.min(len, op.type.len)
+
+            return Object.assign(p, {
+                [cond]: op
+            })
+        }, {})
+
+        const op: StructOp = {
+            attribute: Attributes.Skip(),
+            pipes: [],
             type: {
-                len: Object.keys(ops).reduce((p, c) => Math.min(p + (ops[c]?.type.len ?? 0)), Infinity),
+                len,
                 read: (context: Context, scope: Scope) => {
                     const value = getValue(scope, context)
                     //@ts-ignore
@@ -445,7 +409,7 @@ export class StructType {
                     if (!op) {
                         throw new Error(`Unknown value ${value}`)
                     }
-                    return this.opRead(op, context, scope)
+                    return opRead(op, context, scope)
                 },
                 write: (context: Context, scope: Scope) => {
                     const value = getValue(scope, context)
@@ -454,22 +418,19 @@ export class StructType {
                     if (!op) {
                         throw new Error(`Unknown value ${value}`)
                     }
-                    return this.opWrite(op, context, scope)
+                    return opWrite(op, context, scope)
                 }
-            }
+            },
         }
-
         this.ops.push(op)
-
         this.len += op.type.len// 计算最小长度
-
         return this
     }
 
     read<T extends Record<string, any>>(context: Context, scope?: T) {
         const obj = {} as T;
         for (const op of this.ops) {
-            this.opRead(op, context, obj)
+            opRead(op, context, obj)
         }
         return obj
     }
@@ -477,7 +438,7 @@ export class StructType {
     //@ts-ignore
     write<T extends Record<string, any>>(context: Context, scope?: any, obj: T = {}) {
         for (const op of this.ops) {
-            this.opWrite(op, context, obj)
+            opWrite(op, context, obj)
         }
     }
 }
