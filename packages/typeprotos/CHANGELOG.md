@@ -1,5 +1,12 @@
 # typeprotos
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [d4fc241]
+  - typebuffer@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
