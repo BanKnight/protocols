@@ -361,6 +361,7 @@ export class StructType {
             this.len += b.len;
             this.ops.push(...b.ops);
         }
+        return this
     }
 
     define(name: string, type: TypeOp): this;
