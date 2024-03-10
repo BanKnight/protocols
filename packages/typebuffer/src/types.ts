@@ -332,6 +332,22 @@ export function IPV6BE() {
 }
 
 export const Domain = L8String
+export function Json() {
+    const base = L16StringBE()
+    return {
+        len: base.len,
+        read(context: Context) {
+            const content = base.read(context)
+            return JSON.parse(content)
+        },
+        write(context: Context, scope: any, value: any = undefined) {
+            const content = JSON.stringify(value)
+            base.write(context, scope, content)
+        }
+
+    }
+
+}
 
 class StructBase {
     len: number = 0;
@@ -447,6 +463,8 @@ export class StructType {
 export function Struct(...base: StructType[]) {
     return new StructType(...base)
 }
+
+
 
 
 

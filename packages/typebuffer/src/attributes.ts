@@ -26,6 +26,6 @@ export function Many(keys: Array<string>): Attribute {
 export function Skip() {
     return {
         set() { },
-        get() { return true }
+        get() { }
     }
 }
