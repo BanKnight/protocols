@@ -1,5 +1,11 @@
 # typebuffer
 
+## 0.1.2
+
+### Patch Changes
+
+- 02c6ea7: add json support
+
 ## 0.1.1
 
 ### Patch Changes
