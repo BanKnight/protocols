@@ -78,19 +78,44 @@ const context = {
     write: 0,
 }
 
-const packet = {
-    cmd: 0x01,
-    body: {
-        func: "login",
+{
+    const packet = {
+        cmd: 0x01,
         body: {
-            name: "test",
-            token: "abcd"
+            func: "login",
+            body: {
+                name: "test",
+                token: "abcd"
+            }
         }
     }
+
+    Packet.write(context, null, packet)
+
+    const abcd = Packet.read(context)
+
+    console.dir(abcd)
 }
 
-Packet.write(context, null, packet)
+{
+    context.read = context.write = 0
+    const packet = {
+        cmd: 0x02,
+        body: {
+            session: 10,
+            func: "connect",
+            body: {
+                socket: 100,
+                port: 65534,
+                protocol: "tcp",
+                host: "www.baidu.com"
+            }
+        }
+    }
 
-const abcd = Packet.read(context)
+    Packet.write(context, null, packet)
 
-console.dir(abcd)
+    const back = Packet.read(context)
+
+    console.dir(back)
+}

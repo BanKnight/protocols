@@ -48,21 +48,21 @@ export function UInt16LE(solid: number = 0) {
 
 export function UInt32BE(solid: number = 0) {
     return {
-        len: 2,
+        len: 4,
         read(context: Context) {
             const value = context.buffer.readUInt32BE(context.read);
-            context.read += 2
+            context.read += 4
             return value
         },
         write(context: Context, scope: any, value = solid) {
             context.buffer.writeUInt32BE(value ?? 0, context.write);
-            context.write += 2
+            context.write += 4
         }
     }
 }
 export function UInt32LE(solid: number = 0) {
     return {
-        len: 2,
+        len: 4,
         read(context: Context) {
             const value = context.buffer.readUInt32LE(context.read);
             context.read += 2
@@ -70,7 +70,7 @@ export function UInt32LE(solid: number = 0) {
         },
         write(context: Context, scope: any, value = solid) {
             context.buffer.writeUInt32LE(value ?? 0, context.write);
-            context.write += 2
+            context.write += 4
         }
     }
 }
@@ -78,29 +78,29 @@ export function UInt32LE(solid: number = 0) {
 
 export function UInt64BE(solid: bigint = 0n) {
     return {
-        len: 2,
+        len: 8,
         read(context: Context) {
             const value = context.buffer.readBigUInt64BE(context.read);
-            context.read += 2
+            context.read += 8
             return value
         },
         write(context: Context, scope: any, value = solid) {
             context.buffer.writeBigUInt64BE(value ?? 0, context.write);
-            context.write += 2
+            context.write += 8
         }
     }
 }
 export function UInt64LE(solid: bigint = 0n) {
     return {
-        len: 2,
+        len: 8,
         read(context: Context) {
             const value = context.buffer.readBigUInt64LE(context.read);
-            context.read += 2
+            context.read += 8
             return value
         },
         write(context: Context, scope: any, value = solid) {
             context.buffer.writeBigUInt64LE(value ?? 0, context.write);
-            context.write += 2
+            context.write += 8
         }
     }
 }
@@ -109,8 +109,7 @@ export function Bytes(len: number = 0) {
     return {
         len,
         read(context: Context) {
-            const value = context.buffer.subarray(context.write, context.read);
-            context.read += len
+            const value = context.buffer.subarray(context.read, context.read += len);
             return value
         },
         write(context: Context, scope: any, value: Buffer = Buffer.alloc(len)) {
@@ -142,10 +141,10 @@ export function VarBytes(name: string) {
 export function L8Bytes() {
     const lenOp = UInt8()
     return {
-        len: 1,
+        len: lenOp.len,
         read(context: Context) {
             const len = lenOp.read(context)
-            return context.buffer.subarray(context.write, context.read += len);
+            return context.buffer.subarray(context.read, context.read += len);
         },
         write(context: Context, scope: any, value: Buffer = Buffer.alloc(0)) {
             lenOp.write(context, scope, value.length)
@@ -156,10 +155,10 @@ export function L8Bytes() {
 export function L16BytesLE() {
     const lenOp = UInt16LE()
     return {
-        len: 2,
+        len: lenOp.len,
         read(context: Context) {
             const len = lenOp.read(context)
-            return context.buffer.subarray(context.write, context.read += len);
+            return context.buffer.subarray(context.read, context.read += len);
         },
         write(context: Context, scope: any, value: Buffer) {
             lenOp.write(context, scope, value.length)
@@ -170,10 +169,10 @@ export function L16BytesLE() {
 export function L16BufferBE() {
     const lenOp = UInt16BE()
     return {
-        len: 2,
+        len: lenOp.len,
         read(context: Context) {
             const len = lenOp.read(context)
-            return context.buffer.subarray(context.write, context.read += len);
+            return context.buffer.subarray(context.read, context.read += len);
         },
         write(context: Context, scope: any, value: Buffer) {
             lenOp.write(context, scope, value.length)
@@ -190,13 +189,13 @@ export function L16BufferBE() {
 export function L16ChildBE(child: TypeOp) {
     const lenOp = UInt16BE()
     return {
-        len: 2 + child.len,
+        len: lenOp.len + child.len,
         read(context: Context, scope: any) {
 
             const len = lenOp.read(context)
             const end = context.read + len;
 
-            if (end >= context.write) throw new Error
+            if (end >= context.write) throw new Error("buffer left is is too short to read")
 
             const obj = child.read(context, scope);
 
@@ -233,7 +232,7 @@ export function String() {
 export function L8String() {
     const lenOp = UInt8()
     return {
-        len: 1,
+        len: lenOp.len,
         read(context: Context) {
             const len = lenOp.read(context)
             return context.buffer.toString('utf8', context.read, context.read += len);
@@ -248,7 +247,7 @@ export function L8String() {
 export function L16StringBE() {
     const lenOp = UInt16BE()
     return {
-        len: 1,
+        len: lenOp.len,
         read(context: Context) {
             const len = lenOp.read(context)
             return context.buffer.toString('utf8', context.read, context.read += len);
@@ -263,7 +262,7 @@ export function L16StringBE() {
 export function L16StringLE() {
     const lenOp = UInt16LE()
     return {
-        len: 1,
+        len: lenOp.len,
         read(context: Context) {
             const len = lenOp.read(context)
             return context.buffer.toString('utf8', context.read, context.read += len);
@@ -331,9 +330,8 @@ export function Array(len: number, item: TypeOp) {
 
 export function L8Array(item: TypeOp) {
     const lenOp = UInt8()
-
     return {
-        len: 0,
+        len: lenOp.len,
         read(context: Context, scope: any) {
             const len = lenOp.read(context)
             const array = [] as Array<any>
@@ -404,9 +402,7 @@ export function Json() {
             const content = JSON.stringify(value)
             base.write(context, scope, content)
         }
-
     }
-
 }
 
 export class StructType {
