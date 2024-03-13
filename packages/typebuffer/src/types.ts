@@ -471,7 +471,7 @@ export class StructType {
                     //@ts-ignore
                     const op = ops[value]
                     if (!op) {
-                        throw new Error(`Unknown value ${value}`)
+                        throw new Error(`Unknown how to read, ${value} in 'select' ${property}`)
                     }
                     return opRead(op, context, scope)
                 },
@@ -479,7 +479,7 @@ export class StructType {
                     //@ts-ignore
                     const op = ops[value]
                     if (!op) {
-                        throw new Error(`Unknown value ${value}`)
+                        throw new Error(`Unknown how to write, ${value} in 'select' ${property}`)
                     }
                     return opWrite(op, context, scope)
                 }
