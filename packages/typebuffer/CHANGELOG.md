@@ -1,5 +1,11 @@
 # typebuffer
 
+## 0.1.6
+
+### Patch Changes
+
+- cc27969: add logs
+
 ## 0.1.5
 
 ### Patch Changes
