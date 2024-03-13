@@ -1,0 +1,33 @@
+{
+  "private": true,
+  "name": "example",
+  "version": "0.1.0",
+  "description": "",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "bin": "./dist/index.cjs",
+  "exports": {
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    },
+    "import": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "pkgroll",
+    "dev": "node --import tsx src/index.ts"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pkgroll": "^2.0.1",
+    "typebuffer": "workspace:^"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.1"
+  }
+}

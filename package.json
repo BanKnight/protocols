@@ -9,6 +9,7 @@
         "watch": "pnpm --parallel -r run watch",
         "typebuffer.build": "pnpm --filter typebuffer build",
         "typeprotos.build": "pnpm --filter typeprotos build",
+        "example.dev": "pnpm --filter example dev",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],

@@ -39,9 +39,6 @@ export function opWrite(op: StructOp, context: Context, scope: Scope) {
         const pipe = op.pipes[i]
         value = pipe!.fromLeft(value, scope, context)
     }
-    if (!value) {
-        return
-    }
     op.type.write(context, scope, value)
 }
 

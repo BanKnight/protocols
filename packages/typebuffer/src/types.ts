@@ -6,37 +6,72 @@ import { get, makeOp, opRead, opWrite } from "./utils";
 export function UInt8(solid: number = 0) {
     return {
         len: 1,
-        read(context: Context) { return context.buffer.readUint8(context.offset += 1); },
-        write(context: Context, scope: any, value = solid) { context.buffer[context.offset += 1] = value ?? 0; }
+        read(context: Context) {
+            const value = context.buffer.readUint8(context.offset);
+            context.offset += 1
+            return value
+        },
+        write(context: Context, scope: any, value = solid) {
+            context.buffer[context.offset] = value ?? 0;
+            context.offset += 1
+        }
     }
 }
 export function UInt16BE(solid: number = 0) {
     return {
         len: 2,
-        read(context: Context) { return context.buffer.readUInt16BE(context.offset += 2); },
-        write(context: Context, scope: any, value = solid) { context.buffer.writeUInt16BE(value ?? 0, context.offset += 2); }
+        read(context: Context) {
+            const value = context.buffer.readUInt16BE(context.offset);
+            context.offset += 2
+            return value
+        },
+        write(context: Context, scope: any, value = solid) {
+            context.buffer.writeUInt16BE(value ?? 0, context.offset);
+            context.offset += 2
+        }
     }
 }
 export function UInt16LE(solid: number = 0) {
     return {
         len: 2,
-        read(context: Context) { return context.buffer.readUInt16LE(context.offset += 2); },
-        write(context: Context, scope: any, value = solid) { context.buffer.writeUInt16LE(value ?? 0, context.offset += 2); }
+        read(context: Context) {
+            const value = context.buffer.readUInt16LE(context.offset);
+            context.offset += 2
+            return value
+        },
+        write(context: Context, scope: any, value = solid) {
+            context.buffer.writeUInt16LE(value ?? 0, context.offset);
+            context.offset += 2
+        }
     }
 }
 
 export function UInt32BE(solid: number = 0) {
     return {
         len: 2,
-        read(context: Context) { return context.buffer.readUInt32BE(context.offset += 2); },
-        write(context: Context, scope: any, value = solid) { context.buffer.writeUInt32BE(value ?? 0, context.offset += 2); }
+        read(context: Context) {
+            const value = context.buffer.readUInt32BE(context.offset);
+            context.offset += 2
+            return value
+        },
+        write(context: Context, scope: any, value = solid) {
+            context.buffer.writeUInt32BE(value ?? 0, context.offset);
+            context.offset += 2
+        }
     }
 }
 export function UInt32LE(solid: number = 0) {
     return {
         len: 2,
-        read(context: Context) { return context.buffer.readUInt32LE(context.offset += 2); },
-        write(context: Context, scope: any, value = solid) { context.buffer.writeUInt32LE(value ?? 0, context.offset += 2); }
+        read(context: Context) {
+            const value = context.buffer.readUInt32LE(context.offset);
+            context.offset += 2
+            return value
+        },
+        write(context: Context, scope: any, value = solid) {
+            context.buffer.writeUInt32LE(value ?? 0, context.offset);
+            context.offset += 2
+        }
     }
 }
 
@@ -44,15 +79,29 @@ export function UInt32LE(solid: number = 0) {
 export function UInt64BE(solid: bigint = 0n) {
     return {
         len: 2,
-        read(context: Context) { return context.buffer.readBigUInt64BE(context.offset += 2); },
-        write(context: Context, scope: any, value = solid) { context.buffer.writeBigUInt64BE(value ?? 0, context.offset += 2); }
+        read(context: Context) {
+            const value = context.buffer.readBigUInt64BE(context.offset);
+            context.offset += 2
+            return value
+        },
+        write(context: Context, scope: any, value = solid) {
+            context.buffer.writeBigUInt64BE(value ?? 0, context.offset);
+            context.offset += 2
+        }
     }
 }
 export function UInt64LE(solid: bigint = 0n) {
     return {
         len: 2,
-        read(context: Context) { return context.buffer.readBigUInt64LE(context.offset += 2); },
-        write(context: Context, scope: any, value = solid) { context.buffer.writeBigUInt64LE(value ?? 0, context.offset += 2); }
+        read(context: Context) {
+            const value = context.buffer.readBigUInt64LE(context.offset);
+            context.offset += 2
+            return value
+        },
+        write(context: Context, scope: any, value = solid) {
+            context.buffer.writeBigUInt64LE(value ?? 0, context.offset);
+            context.offset += 2
+        }
     }
 }
 
@@ -60,7 +109,9 @@ export function Bytes(len: number = 0) {
     return {
         len,
         read(context: Context) {
-            return context.buffer.subarray(context.offset, context.offset += len);
+            const value = context.buffer.subarray(context.offset, context.offset += len);
+            context.offset += len
+            return value
         },
         write(context: Context, scope: any, value: Buffer = Buffer.alloc(len)) {
             context.offset += value.copy(context.buffer, context.offset, 0, len);
@@ -89,40 +140,43 @@ export function VarBytes(name: string) {
     }
 }
 export function L8Bytes() {
+    const lenOp = UInt8()
     return {
         len: 1,
         read(context: Context) {
-            const len = context.buffer.readUInt8(context.offset++);
+            const len = lenOp.read(context)
             return context.buffer.subarray(context.offset, context.offset += len);
         },
         write(context: Context, scope: any, value: Buffer = Buffer.alloc(0)) {
-            context.offset = context.buffer.writeUInt8(value.length, context.offset);
+            lenOp.write(context, scope, value.length)
             context.offset += value.copy(context.buffer, context.offset);
         }
     }
 }
-export function L16BufferLE() {
+export function L16BytesLE() {
+    const lenOp = UInt16LE()
     return {
         len: 2,
         read(context: Context) {
-            const len = context.buffer.readUInt16LE(context.offset += 2);
+            const len = lenOp.read(context)
             return context.buffer.subarray(context.offset, context.offset += len);
         },
         write(context: Context, scope: any, value: Buffer) {
-            context.offset = context.buffer.writeUInt16LE(value.length, context.offset);
+            lenOp.write(context, scope, value.length)
             context.offset += value.copy(context.buffer, context.offset);
         }
     }
 }
 export function L16BufferBE() {
+    const lenOp = UInt16BE()
     return {
         len: 2,
         read(context: Context) {
-            const len = context.buffer.readUInt16BE(context.offset += 2);
+            const len = lenOp.read(context)
             return context.buffer.subarray(context.offset, context.offset += len);
         },
-        write(context: Context, scope: any, value: Buffer = Buffer.alloc(0)) {
-            context.offset = context.buffer.writeUInt16BE(value.length, context.offset);
+        write(context: Context, scope: any, value: Buffer) {
+            lenOp.write(context, scope, value.length)
             context.offset += value.copy(context.buffer, context.offset);
         }
     }
@@ -134,11 +188,12 @@ export function L16BufferBE() {
  * @returns 
  */
 export function L16ChildBE(child: TypeOp) {
+    const lenOp = UInt16BE()
     return {
         len: 2 + child.len,
         read(context: Context, scope: any) {
 
-            const len = context.buffer.readUInt16BE(context.offset += 2);
+            const len = lenOp.read(context)
             const end = context.offset + len;
 
             if (context.offset + len > context.buffer.length) throw new Error
@@ -176,43 +231,46 @@ export function String() {
     }
 }
 export function L8String() {
+    const lenOp = UInt8()
     return {
         len: 1,
         read(context: Context) {
-            const len = context.buffer.readUInt8(context.offset += 1);
+            const len = lenOp.read(context)
             return context.buffer.toString('utf8', context.offset, context.offset += len);
         },
         write(context: Context, scope: any, value: string = "") {
             const len = Buffer.byteLength(value, 'utf8');
-            context.offset = context.buffer.writeUInt8(len, context.offset);
+            lenOp.write(context, scope, len)
             context.offset += context.buffer.write(value, context.offset, 'utf8');
         }
     }
 }
 export function L16StringBE() {
+    const lenOp = UInt16BE()
     return {
-        len: 2,
+        len: 1,
         read(context: Context) {
-            const len = context.buffer.readUInt16BE(context.offset += 2);
+            const len = lenOp.read(context)
             return context.buffer.toString('utf8', context.offset, context.offset += len);
         },
         write(context: Context, scope: any, value: string = "") {
             const len = Buffer.byteLength(value, 'utf8');
-            context.offset = context.buffer.writeUInt16BE(len, context.offset);
+            lenOp.write(context, scope, len)
             context.offset += context.buffer.write(value, context.offset, 'utf8');
         }
     }
 }
 export function L16StringLE() {
+    const lenOp = UInt16LE()
     return {
-        len: 2,
+        len: 1,
         read(context: Context) {
-            const len = context.buffer.readUInt16LE(context.offset += 2);
+            const len = lenOp.read(context)
             return context.buffer.toString('utf8', context.offset, context.offset += len);
         },
         write(context: Context, scope: any, value: string = "") {
             const len = Buffer.byteLength(value, 'utf8');
-            context.offset = context.buffer.writeUInt16LE(len, context.offset);
+            lenOp.write(context, scope, len)
             context.offset += context.buffer.write(value, context.offset, 'utf8');
         }
     }
@@ -272,10 +330,12 @@ export function Array(len: number, item: TypeOp) {
 }
 
 export function L8Array(item: TypeOp) {
+    const lenOp = UInt8()
+
     return {
         len: 0,
         read(context: Context, scope: any) {
-            const len = context.buffer.readUInt8(context.offset++);
+            const len = lenOp.read(context)
             const array = [] as Array<any>
             for (let i = 0; i < len; i++) {
                 array.push(item.read(context, array))
@@ -283,7 +343,7 @@ export function L8Array(item: TypeOp) {
             return array
         },
         write(context: Context, scope: any, value: Array<any> = []) {
-            context.buffer.writeUInt8(value.length, context.offset++);
+            lenOp.write(context, value.length)
             for (const one of value) {
                 item.write(context, one, value)
             }
@@ -349,18 +409,6 @@ export function Json() {
 
 }
 
-class StructBase {
-    len: number = 0;
-    ops: Array<StructOp> = []
-
-    constructor(...base: Array<StructBase>) {
-        for (const b of base) {
-            this.len += b.len;
-            this.ops.push(...b.ops);
-        }
-    }
-}
-
 export class StructType {
     len: number = 0;
     ops: Array<StructOp> = []
@@ -415,7 +463,10 @@ export class StructType {
         }, {})
 
         const op: StructOp = {
-            attribute: Attributes.Skip(),
+            attribute: {
+                get: getValue,
+                set() { },
+            },
             pipes: [],
             type: {
                 len,
@@ -428,8 +479,7 @@ export class StructType {
                     }
                     return opRead(op, context, scope)
                 },
-                write: (context: Context, scope: Scope) => {
-                    const value = getValue(scope, context)
+                write: (context: Context, scope: Scope, value: any) => {
                     //@ts-ignore
                     const op = ops[value]
                     if (!op) {
