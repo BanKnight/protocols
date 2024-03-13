@@ -1,5 +1,11 @@
 # typebuffer
 
+## 0.1.4
+
+### Patch Changes
+
+- c77fbee: fix bugs
+
 ## 0.1.3
 
 ### Patch Changes
