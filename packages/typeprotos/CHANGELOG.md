@@ -1,5 +1,12 @@
 # typeprotos
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [4bb7723]
+  - typebuffer@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
