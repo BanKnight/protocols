@@ -1,5 +1,11 @@
 # typebuffer
 
+## 0.1.5
+
+### Patch Changes
+
+- 5aaeb1f: fix bugs
+
 ## 0.1.4
 
 ### Patch Changes
