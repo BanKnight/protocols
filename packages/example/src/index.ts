@@ -74,7 +74,8 @@ export const Packet = Types.Struct()
 
 const context = {
     buffer: Buffer.alloc(65536),
-    offset: 0,
+    read: 0,
+    write: 0,
 }
 
 const packet = {
@@ -90,11 +91,6 @@ const packet = {
 
 Packet.write(context, null, packet)
 
-const recvContext = {
-    buffer: context.buffer.subarray(0, context.offset),
-    offset: 0
-}
-
-const abcd = Packet.read(recvContext)
+const abcd = Packet.read(context)
 
 console.dir(abcd)

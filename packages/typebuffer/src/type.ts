@@ -76,13 +76,17 @@ export interface TypeOp {
  */
 export interface Context {
     /**
+     * 读下标
+     */
+    read: number
+    /**
      * 缓冲区
      */
     buffer: Buffer;
     /**
-     * 偏移量
+     * 写下标
      */
-    offset: number;
+    write: number;
 }
 
 /**
